@@ -25,3 +25,13 @@ clean:
 
 MD.o: MD.f90 ziggurat.o globals.o
 main.o: main.f90 MD.o ziggurat.o globals.o
+
+
+profile: flags += -pg
+profile: clean $(exe)
+	./$(exe)
+	gprof $(exe) gmon.out > profile.txt
+	@echo "Profiling results saved to profile.txt"
+
+profile-clean:
+	rm -f gmon.out profile.txt
