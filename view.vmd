@@ -1,0 +1,17 @@
+mol new produccion.xyz type xyz waitfor all
+mol modstyle 0 0 VDW 0.5 20
+mol modcolor 0 0 ColorID 1
+mol modmaterial 0 0 Glossy
+
+# Definir PBC 
+set L 15.0    
+pbc set {0 0 0} $L $L $L 90 90 90
+pbc box -color black -width 3
+
+display resize 1000 800
+scale by 2.2
+rotate x by -30
+rotate y by 25
+animate speed 0.08
+display projection Orthographic
+color Display Background white
