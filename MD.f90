@@ -15,6 +15,20 @@ subroutine init_coords()
         end do
 end subroutine init_coords
 
+function randn() result(z)
+    implicit none
+    real(kind=8) :: z
+    real(kind=8) :: u1, u2
+
+    call random_number(u1)
+    call random_number(u2)
+
+    ! Avoid log(0)
+    if (u1 == 0d0) u1 = 1d-16
+
+    z = sqrt(-2d0*log(u1)) * cos(2d0*acos(-1d0) * u2)
+end function randn
+
 subroutine update_E_and_F() 
         integer :: i,j
         real(kind=8) :: r_ij(3), norm, ex, v_ij, p
