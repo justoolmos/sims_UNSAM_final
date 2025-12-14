@@ -6,7 +6,7 @@ program main
         integer :: seed,i
         logical :: es
         real(kind=8), allocatable :: Es_min(:)
-        real(kind=8) :: Ek, inst_T, p_in, p
+        real(kind=8) :: Ek, inst_T, p_in, p, t0, t1
 
         !inquire(file='seed.dat',exist=es)
         !if(es) then
@@ -44,18 +44,18 @@ program main
 
         call init_coords()
         call update_E_and_F()
-        call update_lgv_F()
+        !call update_lgv_F()
         
         !Es_min = E_minimization(1000,1)
-        call initiate_velocities()
-        T_inst = get_T()
+        !call initiate_velocities()
+        !T_inst = get_T()
 
 
         !open(unit=10, file = "produccion.dat", action="write", status="replace", form="formatted")
         !write(10,"(A34)") "step,E total,Ep,Ek,F max,v max,T,p"
         
         do i=1,n_steps
-                call integrate()
+                call update_E_and_F()
                 !if(mod(i,100)==0) then
                         !Ek = get_Ek()
                         !write(10,"(I5,A1,f16.8,A1,f16.8,A1,f16.8,A1,f16.8,A1,f16.8,A1,f16.8,A1,f16.8)") &

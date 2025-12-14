@@ -38,13 +38,13 @@ subroutine update_E_and_F()
     ex_cut = (sigma/r_cut)**6
     F_cut  = c24eps*(ex_cut - 2.0*ex_cut*ex_cut)/rcut2
 
-    !$OMP PARALLEL PRIVATE(i,j,k,r_ij,norm2,ex,ex2,v_ij,delta,norm2_3,F_esc) REDUCTION(+:p, E_tot)
+    !$OMP PARALLEL PRIVATE(i,j,k,n,r_ij,norm2,ex,ex2,v_ij,delta,norm2_3,F_esc) REDUCTION(+:p, E_tot)
+    !$OMP DO 
     ! Loop sobre pares de partículas
-    !$OMP DO SCHEDULE(STATIC)
     do i=1,N-1
         do j=i+1,N
             
-            !se hace la correccion de imagen periodica elemento a elemento y luego se calcula norm2, para calcularlo una sola vez
+            ! se hace la correccion de imagen periodica elemento a elemento y luego se calcula norm2, para calcularlo una sola vez
             do k = 1,3
                 delta = r(k,i) - r(k,j)
                 ! Aplicar PBC solo si es necesario
@@ -69,13 +69,7 @@ subroutine update_E_and_F()
                 F_esc = c24eps*(ex - 2.0*ex2)/norm2 - F_cut
                 F(:,i) = F(:,i) - F_esc*r_ij
                 
-                do k=1,3    
-                        !$OMP ATOMIC UPDATE
-                        F(k,j) = F(k,j) + F_esc*r_ij(k)
-                end do
-                
                 p = p  -F_esc * norm2
-                !p = p + dot_product(r_ij, -F_esc*r_ij)
             end if
         end do
     end do
@@ -143,13 +137,13 @@ end subroutine save_coords
 
 subroutine integrate() 
         !asume que la fuerza del paso anterior ya fue calculada
-        r = r + v*dt + 0.5*(F/m)*dt**2  !revisar si esto es paralelizable
-        call pbc()
-        v = v + 0.5*F*dt/m
+        !r = r + v*dt + 0.5*(F/m)*dt**2  !revisar si esto es paralelizable
+        !call pbc()
+        !v = v + 0.5*F*dt/m
         call update_E_and_F()
-        call update_lgv_F()
-        v = v + 0.5*F*dt/m
-        T_inst = get_T()
+        !call update_lgv_F()
+        !v = v + 0.5*F*dt/m
+        !T_inst = get_T()
 end subroutine integrate
 
 subroutine initiate_velocities()
