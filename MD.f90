@@ -1,5 +1,6 @@
 module MD
 
+use omp_lib 
 use globals
 use ziggurat
 
@@ -39,19 +40,9 @@ subroutine update_E_and_F()
 
     !$OMP PARALLEL PRIVATE(i,j,k,r_ij,norm2,ex,ex2,v_ij,delta,norm2_3,F_esc) REDUCTION(+:p, E_tot)
     ! Loop sobre pares de partículas
-    !$OMP DO SCHEDULE(STATIC,2)
+    !$OMP DO SCHEDULE(STATIC)
     do i=1,N-1
         do j=i+1,N
-            ! Diferencia de posición
-            !!r_ij = r(:,i) - r(:,j)
-            !norm2 = r_ij(1)*r_ij(1) + r_ij(2)*r_ij(2) + r_ij(3)*r_ij(3)
-
-            ! Corrección de imágenes periódicas
-            !if(norm2 > L2_4) then
-            !    r_ij = r_ij - (L * int(2*r_ij/L))
-            !    norm2 = r_ij(1)*r_ij(1) + r_ij(2)*r_ij(2) + r_ij(3)*r_ij(3)
-            !end if
-            !!r_ij = r_ij - L * nint(2*r_ij/L)
             
             !se hace la correccion de imagen periodica elemento a elemento y luego se calcula norm2, para calcularlo una sola vez
             do k = 1,3
@@ -77,8 +68,12 @@ subroutine update_E_and_F()
 
                 F_esc = c24eps*(ex - 2.0*ex2)/norm2 - F_cut
                 F(:,i) = F(:,i) - F_esc*r_ij
-                F(:,j) = F(:,j) + F_esc*r_ij
-
+                
+                do k=1,3    
+                        !$OMP ATOMIC UPDATE
+                        F(k,j) = F(k,j) + F_esc*r_ij(k)
+                end do
+                
                 p = p  -F_esc * norm2
                 !p = p + dot_product(r_ij, -F_esc*r_ij)
             end if

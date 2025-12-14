@@ -8,15 +8,15 @@ program main
         real(kind=8), allocatable :: Es_min(:)
         real(kind=8) :: Ek, inst_T, p_in, p
 
-        inquire(file='seed.dat',exist=es)
-        if(es) then
-            open(unit=10,file='seed.dat',status='old')
-            read(10,*) seed
-            close(10)
-            print *,"  * Leyendo semilla de archivo seed.dat"
-        else
+        !inquire(file='seed.dat',exist=es)
+        !if(es) then
+        !    open(unit=10,file='seed.dat',status='old')
+        !    read(10,*) seed
+        !    close(10)
+        !    print *,"  * Leyendo semilla de archivo seed.dat"
+        !else
             seed = 24583490
-        end if
+        !end if
 
         call zigset(seed)
 
@@ -24,12 +24,12 @@ program main
         read(30,*) T,rho,L,n_steps,dt
         close(30)
 
-        inquire(file='produccion.xyz', exist=es)
+        !inquire(file='produccion.xyz', exist=es)
         ! Eliminar el archivo si existe
-        if (es) then
-                call execute_command_line('rm produccion.xyz')
-                print *, "  * El archivo 'produccion.xyz' ya existía y ha sido eliminado"
-        end if
+        !if (es) then
+        !        call execute_command_line('rm produccion.xyz')
+        !        print *, "  * El archivo 'produccion.xyz' ya existía y ha sido eliminado"
+        !end if
 
        
         N = rho*(L**3)
@@ -46,26 +46,26 @@ program main
         call update_E_and_F()
         call update_lgv_F()
         
-        Es_min = E_minimization(5000,1)
+        !Es_min = E_minimization(1000,1)
         call initiate_velocities()
         T_inst = get_T()
 
 
-        open(unit=10, file = "produccion.dat", action="write", status="replace", form="formatted")
-        write(10,"(A34)") "step,E total,Ep,Ek,F max,v max,T,p"
+        !open(unit=10, file = "produccion.dat", action="write", status="replace", form="formatted")
+        !write(10,"(A34)") "step,E total,Ep,Ek,F max,v max,T,p"
         
         do i=1,n_steps
                 call integrate()
-                if(mod(i,100)==0) then
-                        Ek = get_Ek()
-                        write(10,"(I5,A1,f16.8,A1,f16.8,A1,f16.8,A1,f16.8,A1,f16.8,A1,f16.8,A1,f16.8)") &
-                        i,",",E_tot+Ek,",",E_tot,",",Ek,",",maxval(F),",",maxval(v),",",T_inst,",",p_inst
+                !if(mod(i,100)==0) then
+                        !Ek = get_Ek()
+                        !write(10,"(I5,A1,f16.8,A1,f16.8,A1,f16.8,A1,f16.8,A1,f16.8,A1,f16.8,A1,f16.8)") &
+                        !i,",",E_tot+Ek,",",E_tot,",",Ek,",",maxval(F),",",maxval(v),",",T_inst,",",p_inst
                         !write(*,"(A6,I5)") "step: ", i
                         !print *, E_tot + Ek 
-                        call save_coords("produccion.xyz")
-                end if
+                        !call save_coords("produccion.xyz")
+                !end if
         end do
-        close(10)
+        !close(10)
                 
 end program main
 
