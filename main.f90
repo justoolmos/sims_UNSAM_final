@@ -46,7 +46,7 @@ program main
         call update_E_and_F()
         call update_lgv_F()
         
-        Es_min = E_minimization(5000,1)
+        Es_min = E_minimization(1000,1)
         call initiate_velocities()
         T_inst = get_T()
 

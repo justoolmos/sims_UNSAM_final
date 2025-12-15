@@ -17,7 +17,7 @@ end subroutine init_coords
 
 subroutine update_E_and_F() 
     implicit none 
-    integer :: i,j,k,n
+    integer :: i,j,k,exss
     real(kind=8) :: r_ij(3), norm2, ex, ex2, v_ij, p, F_esc
     real(kind=8) :: ex_cut, F_cut, delta, frac_L, Ldiv2
     real(kind=8) :: sigma6, c24eps, L2_4, rcut2, norm2_3
@@ -37,7 +37,7 @@ subroutine update_E_and_F()
     ex_cut = (sigma/r_cut)**6
     F_cut  = c24eps*(ex_cut - 2.0*ex_cut*ex_cut)/rcut2
 
-    !$OMP PARALLEL PRIVATE(i,j,k,r_ij,norm2,ex,ex2,v_ij,delta,norm2_3,F_esc) REDUCTION(+:p, E_tot)
+    !$OMP PARALLEL PRIVATE(i,j,k,exss,r_ij,norm2,ex,ex2,v_ij,delta,norm2_3,F_esc) REDUCTION(+:p, E_tot)
     ! Loop sobre pares de partículas
     !$OMP DO SCHEDULE(STATIC,2)
     do i=1,N-1
@@ -58,8 +58,8 @@ subroutine update_E_and_F()
                 delta = r(k,i) - r(k,j)
                 ! Aplicar PBC solo si es necesario
                 if(abs(delta) > Ldiv2) then
-                    n = nint(delta*frac_L)
-                    delta = delta - n*L
+                    exss = nint(delta*frac_L)
+                    delta = delta - exss*L
                 end if
                 r_ij(k) = delta
             end do
