@@ -18,8 +18,8 @@ end subroutine init_coords
 
 subroutine update_E_and_F() 
     implicit none 
-    integer :: i,j,k,n
-    real(kind=8) :: r_ij(3), norm2, ex, ex2, v_ij, p, F_esc
+    integer :: i,j!,k,n
+    real(kind=8) :: p,r_ij(3), norm2, ex, ex2, v_ij, F_esc
     real(kind=8) :: ex_cut, F_cut, delta, frac_L, Ldiv2
     real(kind=8) :: sigma6, c24eps, L2_4, rcut2, norm2_3
 
@@ -38,39 +38,41 @@ subroutine update_E_and_F()
     ex_cut = (sigma/r_cut)**6
     F_cut  = c24eps*(ex_cut - 2.0*ex_cut*ex_cut)/rcut2
 
-    !$OMP PARALLEL PRIVATE(i,j,k,n,r_ij,norm2,ex,ex2,v_ij,delta,norm2_3,F_esc) REDUCTION(+:p, E_tot)
-    !$OMP DO 
+    !$OMP PARALLEL PRIVATE(i,j) REDUCTION(+:p)
+    !$OMP DO SCHEDULE(STATIC,10) 
     ! Loop sobre pares de partículas
     do i=1,N-1
         do j=i+1,N
-            
+            F(:,i) = F(:,i) + F(:,j)
+            p = p + F(1,i) + F(1,j)
+            F(:,i) = F(:,i) - F(:,j) 
             ! se hace la correccion de imagen periodica elemento a elemento y luego se calcula norm2, para calcularlo una sola vez
-            do k = 1,3
-                delta = r(k,i) - r(k,j)
-                ! Aplicar PBC solo si es necesario
-                if(abs(delta) > Ldiv2) then
-                    n = nint(delta*frac_L)
-                    delta = delta - n*L
-                end if
-                r_ij(k) = delta
-            end do
-            norm2 = r_ij(1)*r_ij(1) + r_ij(2)*r_ij(2) + r_ij(3)*r_ij(3)
+            !do k = 1,3
+            !    delta = r(k,i) - r(k,j)
+            !    ! Aplicar PBC solo si es necesario
+            !    if(abs(delta) > Ldiv2) then
+            !        n = nint(delta*frac_L)
+            !        delta = delta - n*L
+            !    end if
+            !    r_ij(k) = delta
+            !end do
+            !norm2 = r_ij(1)*r_ij(1) + r_ij(2)*r_ij(2) + r_ij(3)*r_ij(3)
 
             ! Computar fuerzas y energía si dentro de r_cut
-            if(norm2 < rcut2) then
+            !if(norm2 < rcut2) then
                 ! Evitar potencia usando multiplicaciones
-                norm2_3 = norm2*norm2*norm2
-                ex   = sigma6 / norm2_3
-                ex2 = ex*ex
-                v_ij = 4.0*eps*(-ex + ex2)
-                v_ij = v_ij - v_cut
-                E_tot = E_tot + v_ij
+            !    norm2_3 = norm2*norm2*norm2
+            !    ex   = sigma6 / norm2_3
+            !    ex2 = ex*ex
+            !    v_ij = 4.0*eps*(-ex + ex2)
+            !    v_ij = v_ij - v_cut
+            !    E_tot = E_tot + v_ij
 
-                F_esc = c24eps*(ex - 2.0*ex2)/norm2 - F_cut
-                F(:,i) = F(:,i) - F_esc*r_ij
+            !    F_esc = c24eps*(ex - 2.0*ex2)/norm2 - F_cut
+            !    F(:,i) = F(:,i) - F_esc*r_ij
                 
-                p = p  -F_esc * norm2
-            end if
+            !    p = p  -F_esc * norm2
+            !end if
         end do
     end do
    !$OMP END DO

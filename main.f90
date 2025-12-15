@@ -41,10 +41,10 @@ program main
         allocate(r(3,N))
         allocate(v(3,N))
         allocate(F(3,N))
-
+        
         call init_coords()
         call update_E_and_F()
-        !call update_lgv_F()
+        call update_lgv_F()
         
         !Es_min = E_minimization(1000,1)
         !call initiate_velocities()
@@ -55,7 +55,8 @@ program main
         !write(10,"(A34)") "step,E total,Ep,Ek,F max,v max,T,p"
         
         do i=1,n_steps
-                call update_E_and_F()
+               call update_E_and_F() 
+                
                 !if(mod(i,100)==0) then
                         !Ek = get_Ek()
                         !write(10,"(I5,A1,f16.8,A1,f16.8,A1,f16.8,A1,f16.8,A1,f16.8,A1,f16.8,A1,f16.8)") &
