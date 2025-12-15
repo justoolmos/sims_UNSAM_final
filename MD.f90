@@ -18,7 +18,8 @@ end subroutine init_coords
 
 subroutine update_E_and_F() 
     implicit none 
-    integer :: i,j!,k,n
+    integer :: i,j
+    integer :: k
     real(kind=8) :: p,r_ij(3), norm2, ex, ex2, v_ij, F_esc
     real(kind=8) :: ex_cut, F_cut, delta, frac_L, Ldiv2
     real(kind=8) :: sigma6, c24eps, L2_4, rcut2, norm2_3
