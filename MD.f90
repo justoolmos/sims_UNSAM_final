@@ -2,6 +2,7 @@ module MD
 
 use globals
 use ziggurat
+use omp_lib
 
 contains
 
@@ -15,50 +16,60 @@ subroutine init_coords()
         end do
 end subroutine init_coords
 
+function randn() result(num)
+!Esta funcion crea una distribucion normal usando Box-Muller transform
+        implicit none
+        real(kind=8) :: u1, u2
+
+        call random_number(u1)
+        call random_number(u2)
+
+        if (u1 <= 0.0) u1 = tiny(1.0)
+
+        num = sqrt(-2.0 * log(u1)) * cos(2.0 * acos(-1.0) * u2)
+end function randn
+
+subroutine init_seeds(seeds, master_seed)
+        integer, allocatable, intent(inout) :: seeds(:,:)
+        integer :: l_seed, i, t_id, j
+        integer, allocatable :: seed(:)
+        integer, parameter, intent(in) :: master_seed
+        
+        n_threads = omp_get_max_threads()
+        call random_seed(size=l_seed)
+        allocate(seed(l_seed), seeds(l_seed,n_threads))
+        
+        do t_id = 0, n_threads-1
+                do j = 1, l_seed
+                        seeds(j, t_id+1) = master_seed + 104729*(t_id+1) + 37*j
+                end do
+        end do       
+
+end subroutine init_seeds  
+
 subroutine update_E_and_F() 
     implicit none 
     integer :: i,j,k,exss
-    real(kind=8) :: r_ij(3), norm2, ex, ex2, v_ij, p, F_esc
-    real(kind=8) :: ex_cut, F_cut, delta, frac_L, Ldiv2
-    real(kind=8) :: sigma6, c24eps, L2_4, rcut2, norm2_3
+    real(kind=8) :: r_ij(3), norm2, ex, ex2, v_ij, p, F_esc, delta, norm2_3
+
 
     ! Inicializaciones
     p = 0.0
     E_tot = 0.0
     F = 0.0
 
-    ! Cálculos fuera del loop
-    sigma6 = sigma**6
-    c24eps = 24.0*eps
-    L2_4   = L*L/4
-    frac_L = 2.0/L
-    Ldiv2 = L/2.0
-    rcut2  = r_cut*r_cut
-    ex_cut = (sigma/r_cut)**6
-    F_cut  = c24eps*(ex_cut - 2.0*ex_cut*ex_cut)/rcut2
-
     !$OMP PARALLEL PRIVATE(i,j,k,exss,r_ij,norm2,ex,ex2,v_ij,delta,norm2_3,F_esc) REDUCTION(+:p, E_tot)
     ! Loop sobre pares de partículas
-    !$OMP DO SCHEDULE(STATIC,2)
+    !$OMP DO SCHEDULE(STATIC,10)
     do i=1,N-1
         do j=i+1,N
-            ! Diferencia de posición
-            !!r_ij = r(:,i) - r(:,j)
-            !norm2 = r_ij(1)*r_ij(1) + r_ij(2)*r_ij(2) + r_ij(3)*r_ij(3)
 
-            ! Corrección de imágenes periódicas
-            !if(norm2 > L2_4) then
-            !    r_ij = r_ij - (L * int(2*r_ij/L))
-            !    norm2 = r_ij(1)*r_ij(1) + r_ij(2)*r_ij(2) + r_ij(3)*r_ij(3)
-            !end if
-            !!r_ij = r_ij - L * nint(2*r_ij/L)
-            
             !se hace la correccion de imagen periodica elemento a elemento y luego se calcula norm2, para calcularlo una sola vez
             do k = 1,3
                 delta = r(k,i) - r(k,j)
                 ! Aplicar PBC solo si es necesario
                 if(abs(delta) > Ldiv2) then
-                    exss = nint(delta*frac_L)
+                    exss = int(delta*frac_L)
                     delta = delta - exss*L
                 end if
                 r_ij(k) = delta
@@ -77,8 +88,15 @@ subroutine update_E_and_F()
 
                 F_esc = c24eps*(ex - 2.0*ex2)/norm2 - F_cut
                 F(:,i) = F(:,i) - F_esc*r_ij
-                F(:,j) = F(:,j) + F_esc*r_ij
-
+                !$OMP ATOMIC UPDATE
+                F(1,j) = F(1,j) + F_esc*r_ij(1)
+                !$OMP END ATOMIC
+                !$OMP ATOMIC UPDATE
+                F(2,j) = F(2,j) + F_esc*r_ij(2)
+                !$OMP END ATOMIC
+                !$OMP ATOMIC UPDATE
+                F(3,j) = F(3,j) + F_esc*r_ij(3)
+                !$OMP END ATOMIC
                 p = p  -F_esc * norm2
                 !p = p + dot_product(r_ij, -F_esc*r_ij)
             end if
@@ -117,8 +135,8 @@ function E_minimization(steps, stride) result(Es)
                 call update_E_and_F()
 
                 if (MOD(i,stride) == 0.0) then
-                        fname = "coords_min.xyz"
-                        call save_coords("coords_min.xyz")
+                !       fname = "coords_min.xyz"
+                !       call save_coords("coords_min.xyz")
                         Es(int(i/stride)) = E_tot
                 end if
 
