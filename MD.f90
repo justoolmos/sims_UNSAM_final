@@ -32,7 +32,7 @@ end function randn
 
 subroutine init_seeds(seeds, master_seed)
         integer, allocatable, intent(inout) :: seeds(:,:)
-        integer :: l_seed, i, t_id, j
+        integer :: i, t_id, j
         integer, allocatable :: seed(:)
        
         n_threads = omp_get_max_threads()
@@ -109,14 +109,31 @@ end subroutine update_E_and_F
 
 subroutine update_lgv_F()
         real(kind=8) :: rand_dev
+        integer :: t_id,i,j
+        integer, allocatable :: seed(:)
+        
+        allocate(seed(l_seed))
 
         rand_dev = sqrt(2.0*lgv_gam*m*T/dt)
+
+        !$OMP PARALLEL PRIVATE(t_id,i,j,seed) 
+        
+        !$OMP WORKSHARE         
         F = F - lgv_gam*v*m
+        !$OMP END WORKSHARE
+        
+        t_id = omp_get_thread_num()
+        seed = seeds(:,t_id+1)
+        call random_seed(put=seed)
+        !$OMP DO SCHEDULE(STATIC,10)
         do i=1,N
                 do j=1,3
-                        F(j,i) = F(j,i) + rand_dev*rnor()
+                        F(j,i) = F(j,i) + rand_dev*randn()
                 end do
         end do
+        !$OMP END DO
+        !$OMP END PARALLEL
+
 end subroutine update_lgv_F
 
 subroutine pbc()

@@ -2,9 +2,9 @@ program main
         use globals
         use ziggurat
         use MD
+        use omp_lib
 
-        integer :: master_seed,i
-        integer, allocatable :: seeds(:,:)
+        integer :: i
         logical :: es
         real(kind=8), allocatable :: Es_min(:)
         real(kind=8) :: Ek, inst_T, p_in, p
@@ -22,8 +22,7 @@ program main
 
         call zigset(master_seed)
         
-        
-
+        call init_seeds(seeds, master_seed)        
 
         open(unit=30, file="in.dat", status="old", action="read")
         read(30,*) T,rho,L,n_steps,dt
