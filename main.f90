@@ -3,23 +3,27 @@ program main
         use ziggurat
         use MD
 
-        integer :: seed,i
+        integer :: master_seed,i
+        integer, allocatable :: seeds(:,:)
         logical :: es
         real(kind=8), allocatable :: Es_min(:)
         real(kind=8) :: Ek, inst_T, p_in, p
-
+        
 
         inquire(file='seed.dat',exist=es)
         if(es) then
             open(unit=10,file='seed.dat',status='old')
-            read(10,*) seed
+            read(10,*) master_seed
             close(10)
             print *,"  * Leyendo semilla de archivo seed.dat"
         else
-            seed = 24583490
+            master_seed = 24583490
         end if
 
-        call zigset(seed)
+        call zigset(master_seed)
+        
+        
+
 
         open(unit=30, file="in.dat", status="old", action="read")
         read(30,*) T,rho,L,n_steps,dt

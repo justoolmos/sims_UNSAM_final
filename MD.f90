@@ -20,6 +20,7 @@ function randn() result(num)
 !Esta funcion crea una distribucion normal usando Box-Muller transform
         implicit none
         real(kind=8) :: u1, u2
+        real(kind=8) :: num
 
         call random_number(u1)
         call random_number(u2)
@@ -33,12 +34,11 @@ subroutine init_seeds(seeds, master_seed)
         integer, allocatable, intent(inout) :: seeds(:,:)
         integer :: l_seed, i, t_id, j
         integer, allocatable :: seed(:)
-        integer, parameter, intent(in) :: master_seed
-        
+       
         n_threads = omp_get_max_threads()
         call random_seed(size=l_seed)
         allocate(seed(l_seed), seeds(l_seed,n_threads))
-        
+       
         do t_id = 0, n_threads-1
                 do j = 1, l_seed
                         seeds(j, t_id+1) = master_seed + 104729*(t_id+1) + 37*j
