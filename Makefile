@@ -4,7 +4,7 @@ exe = main
 fcomp = gfortran #ifort # /opt/intel/compiler70/ia32/bin/ifc  
 # Warning: the debugger doesn't get along with the optimization options
 # So: not use -O3 WITH -g option
-flags =  -O3  
+flags =  -fopenmp -O3  
 # Remote compilation
 OBJS = ziggurat.o globals.o MD.o main.o
 
@@ -27,11 +27,11 @@ MD.o: MD.f90 ziggurat.o globals.o
 main.o: main.f90 MD.o ziggurat.o globals.o
 
 
-profile: flags += -pg
-profile: clean $(exe)
-	./$(exe)
-	gprof $(exe) gmon.out > profile.txt
-	@echo "Profiling results saved to profile.txt"
+#profile: flags += -pg
+#profile: clean $(exe)
+#	./$(exe)
+#	gprof $(exe) gmon.out > profile.txt
+#	@echo "Profiling results saved to profile.txt"
 
-profile-clean:
-	rm -f gmon.out profile.txt
+#profile-clean:
+#	rm -f gmon.out profile.txt

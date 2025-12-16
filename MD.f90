@@ -137,7 +137,9 @@ subroutine update_lgv_F()
 end subroutine update_lgv_F
 
 subroutine pbc()
+        !$OMP PARALLEL WORKSHARE
         r = r - L*floor(r/L)
+        !$OMP END PARALLEL WORKSHARE
 end subroutine pbc       
 
 function E_minimization(steps, stride) result(Es)
@@ -183,12 +185,18 @@ end subroutine save_coords
 
 subroutine integrate() 
         !asume que la fuerza del paso anterior ya fue calculada
+        !$OMP PARALLEL WORKSHARE
         r = r + v*dt + 0.5*(F/m)*dt**2  !revisar si esto es paralelizable
+        !$OMP END PARALLEL WORKSHARE
         call pbc()
+        !$OMP PARALLEL WORKSHARE
         v = v + 0.5*F*dt/m
+        !$OMP END PARALLEL WORKSHARE
         call update_E_and_F()
         call update_lgv_F()
+        !$OMP PARALLEL WORKSHARE
         v = v + 0.5*F*dt/m
+        !$OMP END PARALLEL WORKSHARE
         T_inst = get_T()
 end subroutine integrate
 
