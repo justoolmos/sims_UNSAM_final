@@ -7,6 +7,8 @@ program main
         logical :: es
         real(kind=8), allocatable :: Es_min(:)
         real(kind=8) :: Ek, inst_T, p_in, p
+        real(kind=8) :: ex_cut, F_cut, frac_L, Ldiv2
+        real(kind=8) :: sigma6, c24eps, L2_4, rcut2, norm2_3
 
         inquire(file='seed.dat',exist=es)
         if(es) then
@@ -37,7 +39,17 @@ program main
         r_cut = sigma*2.5
         v_cut = 4*eps*(-(sigma/r_cut)**6+(sigma/r_cut)**12)
 
+        !Constantes usadas para computar F y E
+        sigma6 = sigma**6
+        c24eps = 24.0*eps
+        L2_4   = L*L/4
+        frac_L = 2.0/L
+        Ldiv2 = L/2.0
+        rcut2  = r_cut*r_cut
+        ex_cut = (sigma/r_cut)**6
+        F_cut  = c24eps*(ex_cut - 2.0*ex_cut*ex_cut)/rcut2
 
+        !Comienza el programa
         allocate(r(3,N))
         allocate(v(3,N))
         allocate(F(3,N))
@@ -46,7 +58,7 @@ program main
         call update_E_and_F()
         call update_lgv_F()
         
-        Es_min = E_minimization(1000,1)
+        Es_min = E_minimization(10000,1)
         call initiate_velocities()
         T_inst = get_T()
 
