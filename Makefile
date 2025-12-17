@@ -4,7 +4,7 @@ exe = main
 fcomp = gfortran #ifort # /opt/intel/compiler70/ia32/bin/ifc  
 # Warning: the debugger doesn't get along with the optimization options
 # So: not use -O3 WITH -g option
-flags =  -O3  
+flags = -fopenmp  -O3  
 # Remote compilation
 OBJS = ziggurat.o globals.o MD.o main.o
 
